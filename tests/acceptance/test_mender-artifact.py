@@ -15,6 +15,7 @@
 
 from fabric.api import *
 
+import logging
 import pytest
 import subprocess
 import os
@@ -257,7 +258,7 @@ class TestMenderArtifact:
         size_from_artifact = int(gd['size'])
         size_from_build = int(bitbake_variables["MENDER_CALC_ROOTFS_SIZE"]) * 1024
 
-        print('matched:', gd)
+        logging.debug('matched:', gd)
         if re.match('.*\.ubifs', gd['image']):
             # some filesystems (eg. ubifs) may use compression or empty space may
             # not be a part of the image, in which case the image will be smaller

@@ -15,6 +15,7 @@
 
 from fabric.api import *
 
+import logging
 import pytest
 import subprocess
 import os
@@ -151,7 +152,7 @@ class TestSdimg:
 
         except:
             subprocess.call(["ls", "-l", "device_type"])
-            print("Contents of artifact_info:")
+            logging.error("Contents of artifact_info:")
             subprocess.call(["cat", "device_type"])
             raise
 

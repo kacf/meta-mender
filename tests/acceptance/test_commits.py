@@ -13,6 +13,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import logging
 import pytest
 import re
 import subprocess
@@ -44,6 +45,6 @@ class TestCommits:
             output = subprocess.check_output(["3rdparty/mendertesting/check_commits.sh"] + commit_range,
                                              stderr=subprocess.STDOUT)
             # Print output, useful to make sure correct commit range is checked.
-            print(output)
+            logging.info(output)
         except subprocess.CalledProcessError as e:
             pytest.fail(e.output)

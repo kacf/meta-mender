@@ -14,6 +14,7 @@
 #    limitations under the License.
 
 import copy
+import logging
 import multiprocessing
 import os
 import re
@@ -38,7 +39,7 @@ class TestUbootAutomation:
         meta_mender_uboot_rev = subprocess.check_output("git rev-list -n1 HEAD -- ../../meta-mender-core/recipes-bsp/u-boot",
                                                         shell=True).strip()
         if expected_poky_rev != poky_rev or expected_meta_mender_uboot_rev != meta_mender_uboot_rev:
-            print("""Need to run test_uboot_compile. Used these SHAs for comparison:
+            logging.info("""Need to run test_uboot_compile. Used these SHAs for comparison:
 
 poky_rev = %s
 meta_mender_uboot_rev = %s
@@ -120,8 +121,8 @@ change."""
                 with open(os.path.join(env['LOGS'], file)) as fd:
                     log = fd.readlines()
                     if "AutoPatchFailed\n" in log:
-                        print("Last 50 lines of output from failed board: " + file)
-                        print("".join(log[-50:]))
+                        logging.error("Last 50 lines of output from failed board: " + file)
+                        logging.error("".join(log[-50:]))
             raise
 
         shutil.rmtree(env['LOGS'])

@@ -15,11 +15,13 @@
 
 from common import *
 
+import logging
+
 @pytest.fixture(scope="session")
 def setup_board(request, clean_image, bitbake_variables):
     bt = pytest.config.getoption("--board-type")
 
-    print('board type:', bt)
+    logging.info('board type:', bt)
     if "qemu" in bt:
         return qemu_running(request, clean_image)
     elif bt == "beagleboneblack":
@@ -78,7 +80,7 @@ def qemu_running(request, clean_image):
     latest_sdimg = latest_build_artifact(clean_image['build_dir'], ".sdimg")
     latest_vexpress_nor = latest_build_artifact(clean_image['build_dir'], ".vexpress-nor")
 
-    print("sdimg: {} vexpress-nor: {}".format(latest_sdimg, latest_vexpress_nor))
+    logging.info("sdimg: {} vexpress-nor: {}".format(latest_sdimg, latest_vexpress_nor))
 
     if latest_sdimg:
         qemu, img_path = start_qemu_sdimg(latest_sdimg)
@@ -87,7 +89,7 @@ def qemu_running(request, clean_image):
     else:
         pytest.fail("cannot find a suitable image type")
 
-    print("qemu started with pid {}, image {}".format(qemu.pid, img_path))
+    logging.info("qemu started with pid {}, image {}".format(qemu.pid, img_path))
 
     # Make sure we revert to the first root partition on next reboot, makes test
     # cases more predictable.
@@ -184,12 +186,12 @@ def successful_image_update_mender(request, clean_image):
     latest_mender_image = latest_build_artifact(clean_image['build_dir'], ".mender")
 
     if os.path.lexists("successful_image_update.mender"):
-        print("Using existing 'successful_image_update.mender' in current directory")
+        logging.info("Using existing 'successful_image_update.mender' in current directory")
         return "successful_image_update.mender"
 
     os.symlink(latest_mender_image, "successful_image_update.mender")
 
-    print("Symlinking 'successful_image_update.mender' to '%s'" % latest_mender_image)
+    logging.info("Symlinking 'successful_image_update.mender' to '%s'" % latest_mender_image)
 
     def cleanup_image_dat():
         os.remove("successful_image_update.mender")

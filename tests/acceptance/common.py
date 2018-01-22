@@ -18,6 +18,7 @@ from fabric.contrib.files import append
 import fabric.network
 
 from distutils.version import LooseVersion
+import logging
 import pytest
 import os
 import re
@@ -87,7 +88,7 @@ def start_qemu(qenv=None):
         # or do the necessary cleanup if we're not
         try:
             # qemu might have exited and this would raise an exception
-            print('cleaning up qemu instance with pid {}'.format(proc.pid))
+            logging.info('cleaning up qemu instance with pid {}'.format(proc.pid))
             proc.terminate()
         except:
             pass
@@ -125,7 +126,7 @@ def start_qemu_sdimg(latest_sdimg):
 def start_qemu_flash(latest_vexpress_nor):
     """Start qemu instance running *.vexpress-nor image"""
 
-    print("qemu raw flash with image {}".format(latest_vexpress_nor))
+    logging.info("qemu raw flash with image {}".format(latest_vexpress_nor))
 
     # make a temp file, make sure that it has .vexpress-nor suffix, so that
     # mender-qemu will know how to handle it
@@ -179,7 +180,7 @@ def run_after_connect(cmd, wait=360):
                 output = run(cmd)
                 break
             except BaseException as e:
-                print("Could not connect to host %s: %s" % (env.host_string, e))
+                logging.error("Could not connect to host %s: %s" % (env.host_string, e))
                 if attempt_time >= start_time + wait:
                     raise Exception("Could not reconnect to host")
                 now = time.time()
@@ -312,7 +313,7 @@ def common_boot_from_internal():
 def latest_build_artifact(builddir, extension):
     output = subprocess.check_output(["sh", "-c", "ls -t %s/tmp*/deploy/images/*/*%s | head -n 1" % (builddir, extension)])
     output = output.rstrip('\r\n')
-    print("Found latest image of type '%s' to be: %s" % (extension, output))
+    logging.info("Found latest image of type '%s' to be: %s" % (extension, output))
     return output
 
 def get_bitbake_variables(target, env_setup="true"):
@@ -372,11 +373,11 @@ def signing_key(key_type):
 
 def run_verbose(cmd, capture=False):
     if capture:
-        print("subprocess.check_output(\"%s\")" % cmd)
+        logging.info("subprocess.check_output(\"%s\")" % cmd)
         return subprocess.check_output(cmd, shell=True, executable="/bin/bash",
                                        stderr=subprocess.STDOUT)
     else:
-        print(cmd)
+        logging.info(cmd)
         return subprocess.check_call(cmd, shell=True, executable="/bin/bash")
 
 def run_bitbake(prepared_test_build, target=None, capture=False):
@@ -418,7 +419,7 @@ def versions_of_recipe(recipe):
 def make_tempdir(delete=True):
     """context manager for temporary directories"""
     tdir = tempfile.mkdtemp(prefix='meta-mender-acceptance.')
-    print('created dir', tdir)
+    logging.info('created dir', tdir)
     try:
         yield tdir
     finally:

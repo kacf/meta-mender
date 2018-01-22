@@ -13,6 +13,7 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
+import logging
 import os
 import os.path
 
@@ -21,6 +22,9 @@ from fabric.api import *
 import unittest
 
 from fixtures import *
+
+
+logging.getLogger().setLevel(logging.INFO)
 
 
 def pytest_addoption(parser):

@@ -15,6 +15,7 @@
 
 from fabric.api import *
 
+import logging
 import json
 import os
 import pytest
@@ -208,7 +209,7 @@ class TestUpdates:
 
         try:
             output = run("mender -rootfs http://%s/successful_image_update.mender" % (http_server_location))
-            print("output from rootfs update: ", output)
+            logging.info("output from rootfs update: ", output)
         finally:
             if not board and not use_s3:
                 http_server.terminate()

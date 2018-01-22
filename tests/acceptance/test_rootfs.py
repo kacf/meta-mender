@@ -15,6 +15,7 @@
 
 from fabric.api import *
 
+import logging
 import pytest
 import subprocess
 import os
@@ -77,7 +78,7 @@ class TestRootfs:
 
             except:
                 subprocess.call(["ls", "-l", "artifact_info"])
-                print("Contents of artifact_info:")
+                logging.error("Contents of artifact_info:")
                 subprocess.call(["cat", "artifact_info"])
                 raise
 
