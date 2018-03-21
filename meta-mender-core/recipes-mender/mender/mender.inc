@@ -85,10 +85,14 @@ python do_prepare_mender_conf() {
         bb.debug(1, "mender.conf not present in ${WORKDIR}, generating a new one.")
         conf = {}
 
-    def conf_maybe_add(key, value, integer):
+    def conf_maybe_add(key, value, is_integer, src):
         if value is not None and value != "":
-            if integer:
-                conf[key] = int(value)
+            orig_value = value
+            if is_integer:
+                value = int(value)
+            if conf.get(key) is not None and conf[key] != value:
+                bb.warn("%s inside mender.conf conflicts with %s ('%s' != '%s'). Using mender.conf value."
+                        % (key, src, conf[key], orig_value))
             else:
                 conf[key] = value
 
@@ -97,15 +101,23 @@ python do_prepare_mender_conf() {
 
     # Add new variable -> config assignments here.
     if key_in_src_uri or key_in_var:
-        conf_maybe_add("ArtifactVerifyKey", "%s/mender/artifact-verify-key.pem" % d.getVar("sysconfdir"), integer=False)
-    conf_maybe_add("InventoryPollIntervalSeconds", d.getVar("MENDER_INVENTORY_POLL_INTERVAL_SECONDS"), integer=True)
+        conf_maybe_add("ArtifactVerifyKey", "%s/mender/artifact-verify-key.pem" % d.getVar("sysconfdir"), integer=False,
+                       "standard file location taken from artifact-verify-key.pem in SRC_URI")
+    conf_maybe_add("InventoryPollIntervalSeconds", d.getVar("MENDER_INVENTORY_POLL_INTERVAL_SECONDS"), integer=True,
+                   "MENDER_INVENTORY_POLL_INTERVAL_SECONDS")
     # Mandatory variables - will always exist
-    conf_maybe_add("RetryPollIntervalSeconds", d.getVar("MENDER_RETRY_POLL_INTERVAL_SECONDS"), integer=True)
-    conf_maybe_add("RootfsPartA", d.getVar("MENDER_ROOTFS_PART_A"), integer=False)
-    conf_maybe_add("RootfsPartB", d.getVar("MENDER_ROOTFS_PART_B"), integer=False)
-    conf_maybe_add("ServerCertificate", d.getVar("MENDER_CERT_LOCATION"), integer=False)
-    conf_maybe_add("ServerURL", d.getVar("MENDER_SERVER_URL"), integer=False)
-    conf_maybe_add("UpdatePollIntervalSeconds", d.getVar("MENDER_UPDATE_POLL_INTERVAL_SECONDS"), integer=True)
+    conf_maybe_add("RetryPollIntervalSeconds", d.getVar("MENDER_RETRY_POLL_INTERVAL_SECONDS"), integer=True,
+                   "MENDER_RETRY_POLL_INTERVAL_SECONDS")
+    conf_maybe_add("RootfsPartA", d.getVar("MENDER_ROOTFS_PART_A"), integer=False,
+                   "MENDER_ROOTFS_PART_A")
+    conf_maybe_add("RootfsPartB", d.getVar("MENDER_ROOTFS_PART_B"), integer=False,
+                   "MENDER_ROOTFS_PART_B")
+    conf_maybe_add("ServerCertificate", d.getVar("MENDER_CERT_LOCATION"), integer=False,
+                   "MENDER_CERT_LOCATION")
+    conf_maybe_add("ServerURL", d.getVar("MENDER_SERVER_URL"), integer=False,
+                   "MENDER_SERVER_URL")
+    conf_maybe_add("UpdatePollIntervalSeconds", d.getVar("MENDER_UPDATE_POLL_INTERVAL_SECONDS"), integer=True,
+                   "MENDER_UPDATE_POLL_INTERVAL_SECONDS")
 
     # Tenant-token is optional, but falls back to a default-value set in config.go
     conf_maybe_add("TenantToken", d.getVar("MENDER_TENANT_TOKEN"), integer=False)
