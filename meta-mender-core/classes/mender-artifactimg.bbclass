@@ -47,7 +47,7 @@ IMAGE_CMD_mender () {
     mender-artifact write rootfs-image \
         -n ${MENDER_ARTIFACT_NAME} \
         $extra_args \
-        -u ${IMGDEPLOYDIR}/${IMAGE_LINK_NAME}.${ARTIFACTIMG_FSTYPE} \
+        -f ${IMGDEPLOYDIR}/${IMAGE_LINK_NAME}.${ARTIFACTIMG_FSTYPE} \
         ${MENDER_ARTIFACT_EXTRA_ARGS} \
         -o ${IMGDEPLOYDIR}/${IMAGE_NAME}${IMAGE_NAME_SUFFIX}.mender
 }

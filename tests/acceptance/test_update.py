@@ -140,9 +140,9 @@ class TestUpdates:
         try:
             # Make a dummy/broken update
             subprocess.call("dd if=/dev/zero of=image.dat bs=1M count=0 seek=16", shell=True)
-            subprocess.call("mender-artifact write rootfs-image -t %s -n test-update -u image.dat -o image.mender" % image_type, shell=True)
+            subprocess.call("mender-artifact write rootfs-image -t %s -n test-update -f image.dat -o image.mender" % image_type, shell=True)
             put("image.mender", remote_path="/var/tmp/image.mender")
-            run("mender -rootfs /var/tmp/image.mender -f")
+            run("mender -install /var/tmp/image.mender")
             reboot()
 
             # Now qemu is auto-rebooted twice; once to boot the dummy image,
@@ -173,9 +173,9 @@ class TestUpdates:
         try:
             # Make a too big update
             subprocess.call("dd if=/dev/zero of=image.dat bs=1M count=0 seek=1024", shell=True)
-            subprocess.call("mender-artifact write rootfs-image -t %s -n test-update-too-big -u image.dat -o image-too-big.mender" % image_type, shell=True)
+            subprocess.call("mender-artifact write rootfs-image -t %s -n test-update-too-big -f image.dat -o image-too-big.mender" % image_type, shell=True)
             put("image-too-big.mender", remote_path="/var/tmp/image-too-big.mender")
-            output = run("mender -rootfs /var/tmp/image-too-big.mender -f ; echo 'ret_code=$?'")
+            output = run("mender -install /var/tmp/image-too-big.mender ; echo 'ret_code=$?'")
 
             assert(output.find("no space left on device") >= 0)
             assert(output.find("ret_code=0") < 0)
@@ -208,7 +208,7 @@ class TestUpdates:
             assert(http_server)
 
         try:
-            output = run("mender -rootfs http://%s/successful_image_update.mender -f" % (http_server_location))
+            output = run("mender -install http://%s/successful_image_update.mender" % (http_server_location))
             print("output from rootfs update: ", output)
         finally:
             if http_server:
@@ -462,7 +462,7 @@ class TestUpdates:
 
         image_type = bitbake_variables["MENDER_DEVICE_TYPE"]
 
-        subprocess.check_call("mender-artifact write rootfs-image %s -t %s -n test-update -u image.dat -o image.mender"
+        subprocess.check_call("mender-artifact write rootfs-image %s -t %s -n test-update -f image.dat -o image.mender"
                               % (artifact_args, image_type), shell=True)
 
         # If instructed to, corrupt the signature and/or checksum.
@@ -554,7 +554,7 @@ class TestUpdates:
                 run('echo "%s" | dd of=%s' % (old_content, passive))
 
             with settings(warn_only=True):
-                result = run("mender -rootfs image.mender -f")
+                result = run("mender -install image.mender")
 
             if sig_case.success:
                 if result.return_code != 0:
@@ -657,9 +657,9 @@ class TestUpdates:
         try:
             # Make a dummy/broken update
             subprocess.call("dd if=/dev/zero of=image.dat bs=1M count=0 seek=8", shell=True)
-            subprocess.call("mender-artifact write rootfs-image -t %s -n test-update -u image.dat -o image.mender" % image_type, shell=True)
+            subprocess.call("mender-artifact write rootfs-image -t %s -n test-update -f image.dat -o image.mender" % image_type, shell=True)
             put("image.mender", remote_path="/var/tmp/image.mender")
-            run("mender -rootfs /var/tmp/image.mender -f")
+            run("mender -install /var/tmp/image.mender")
 
             new_checksums = Helpers.get_env_checksums(bitbake_variables)
 
@@ -774,7 +774,7 @@ class TestUpdates:
         try:
             # Make a dummy/broken update
             subprocess.call("dd if=/dev/zero of=image.dat bs=1M count=0 seek=16", shell=True)
-            subprocess.call("mender-artifact write rootfs-image -t %s -n test-update -u image.dat -o image.mender" % image_type, shell=True)
+            subprocess.call("mender-artifact write rootfs-image -t %s -n test-update -f image.dat -o image.mender" % image_type, shell=True)
             put("image.mender", remote_path="/var/tmp/image.mender")
 
             # Zero the environment, causing the fw-utils to use their built in
@@ -790,7 +790,7 @@ class TestUpdates:
                     % (entry[0], int(entry[1], 0), int(entry[2], 0)))
 
             try:
-                output = run("mender -rootfs /var/tmp/image.mender -f")
+                output = run("mender -install /var/tmp/image.mender")
                 pytest.fail("Update succeeded when canary was not present!")
             except:
                 output = run("fw_printenv upgrade_available")
