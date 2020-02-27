@@ -16,5 +16,5 @@ def if_kernel_recipe(if_true, if_false, d):
     else:
         return if_false
 
-# SRC_URI_append_mender-grub_arm = "${@if_kernel_recipe(' file://enable_efi_stub.cfg', '', d)}"
-# SRC_URI_append_mender-grub_aarch64 = "${@if_kernel_recipe(' file://enable_efi_stub.cfg', '', d)}"
+SRC_URI_append_mender-grub_arm = "${@if_kernel_recipe(' file://enable_efi_stub.cfg', '', d)}"
+SRC_URI_append_mender-grub_aarch64 = "${@if_kernel_recipe(' file://enable_efi_stub.cfg', '', d)}"
