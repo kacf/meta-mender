@@ -20,4 +20,4 @@ COMPATIBLE_MACHINE_vexpress-qemu-flash = "vexpress-qemu-flash"
 # at the time of writing. Rather than dig into this we will just remove this
 # patch for now. This can probably be removed later when upstream has fixed this
 # problem. (July 2018)
-KERNEL_FEATURES_remove_qemuall = "features/kernel-sample/kernel-sample.scc"
+KERNEL_FEATURES_remove_vexpress-qemu-flash = "features/kernel-sample/kernel-sample.scc"
