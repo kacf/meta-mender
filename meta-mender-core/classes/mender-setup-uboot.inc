@@ -39,6 +39,10 @@ PREFERRED_PROVIDER_u-boot-tools ??= "${@mender_check_distro_features_early_conta
                                                                                         'mender-uboot', \
                                                                                         'u-boot-mender-tools', \
                                                                                         'u-boot-tools')}"
+PREFERRED_RPROVIDER_nativesdk-u-boot-mkimage = "${@mender_check_distro_features_early_contains(d, \
+                                                                                        'mender-uboot', \
+                                                                                        'nativesdk-u-boot-mender-tools', \
+                                                                                        'nativesdk-u-boot-tools')}"
 
 def mender_check_distro_features_early_contains(d, feature, if_true, if_false):
     # Why this complicated function instead of checking DISTRO_FEATURES
