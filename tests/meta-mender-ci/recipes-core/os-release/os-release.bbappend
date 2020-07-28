@@ -1,9 +1,9 @@
-FILES_${PN}_append_mender-enabled = " /data${nonarch_libdir}/os-release /data${sysconfdir}/os-release"
-FILES_${PN}-staticdev_remove_mender-enabled = "${nonarch_libdir}/os-release/*.a"
-FILES_${PN}-dev_remove_mender-enabled = "${nonarch_libdir}/os-release/*.la"
-FILES_${PN}_remove_mender-enabled = "${nonarch_libdir}/os-release/*"
+FILES_${PN}_append_mender-client-install = " /data${nonarch_libdir}/os-release /data${sysconfdir}/os-release"
+FILES_${PN}-staticdev_remove_mender-client-install = "${nonarch_libdir}/os-release/*.a"
+FILES_${PN}-dev_remove_mender-client-install = "${nonarch_libdir}/os-release/*.la"
+FILES_${PN}_remove_mender-client-install = "${nonarch_libdir}/os-release/*"
 
-do_install_append_mender-enabled() {
+do_install_append_mender-client-install() {
     # Enable os-release to be changed from a R/O rootfs.
 
     mkdir -p ${D}/data${sysconfdir}

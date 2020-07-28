@@ -1,4 +1,4 @@
-do_install_append_mender-enabled() {
+do_install_append_mender-client-install() {
     # Enable /etc/issue to be changed from R/O rootfs.
     mkdir -p ${D}/data${sysconfdir}
     mv ${D}${sysconfdir}/issue ${D}/data${sysconfdir}/issue

@@ -1,5 +1,3 @@
-OVERRIDES =. "mender-enabled:"
-
 inherit mender-helpers
 
 # ------------------------------ CONFIGURATION ---------------------------------
