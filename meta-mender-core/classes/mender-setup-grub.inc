@@ -6,8 +6,14 @@ PREFERRED_RPROVIDER_grub-efi ?= "grub-efi"
 PREFERRED_PROVIDER_grub-editenv ?= "grub"
 PREFERRED_RPROVIDER_grub-editenv ?= "grub"
 
-PREFERRED_PROVIDER_virtual/grub-bootconf ?= "grub-mender-grubenv"
-PREFERRED_RPROVIDER_virtual/grub-bootconf ?= "grub-mender-grubenv"
+PREFERRED_PROVIDER_virtual/grub-bootconf ?= "${@mender_check_distro_features_early_contains(d, \
+                                                                                       'mender-grub', \
+                                                                                       'grub-mender-grubenv', \
+                                                                                       '')}"
+PREFERRED_RPROVIDER_virtual/grub-bootconf ?= "${@mender_check_distro_features_early_contains(d, \
+                                                                                       'mender-grub', \
+                                                                                       'grub-mender-grubenv', \
+                                                                                       '')}"
 
 # Set EFI_PROVIDER.  Not all MACHINE configs use it but notably
 # intel-corei7-64 does and without this we use the default of systemd-boot.

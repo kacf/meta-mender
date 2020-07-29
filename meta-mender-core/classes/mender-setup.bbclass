@@ -5,8 +5,8 @@ inherit mender-helpers
 # The machine to be used for Mender.
 # For some reason 'bitbake -e' does not report the MACHINE value so
 # we use this as a proxy in case it is not available when needed.
-export MENDER_MACHINE = "${MACHINE}"
-BB_HASHBASE_WHITELIST += "MENDER_MACHINE"
+MENDER_MACHINE_mender-client-install = "${MACHINE}"
+BB_HASHBASE_WHITELIST_append_mender-client-install = " MENDER_MACHINE"
 
 # The storage device that holds the device partitions.
 MENDER_STORAGE_DEVICE ??= "${MENDER_STORAGE_DEVICE_DEFAULT}"
@@ -211,11 +211,16 @@ IMAGE_CLASSES += "mender-part-images mender-ubimg mender-artifactimg mender-data
 IMAGE_NAME = "${IMAGE_BASENAME}-${MENDER_DEVICE_TYPE}${IMAGE_VERSION_SUFFIX}"
 IMAGE_LINK_NAME = "${IMAGE_BASENAME}-${MENDER_DEVICE_TYPE}"
 
-# MENDER_FEATURES_ENABLE and MENDER_FEATURES_DISABLE map to
-# DISTRO_FEATURES_BACKFILL and DISTRO_FEATURES_BACKFILL_CONSIDERED,
-# respectively.
-DISTRO_FEATURES_BACKFILL_append = " ${MENDER_FEATURES_ENABLE}"
-DISTRO_FEATURES_BACKFILL_CONSIDERED_append = " ${MENDER_FEATURES_DISABLE}"
+def mender_feature_is_enabled(feature, if_true, if_false, d):
+    in_enable = bb.utils.contains('MENDER_FEATURES_ENABLE', feature, True, False, d)
+    in_disable = bb.utils.contains('MENDER_FEATURES_DISABLE', feature, True, False, d)
+
+    if in_enable and not in_disable:
+        return if_true
+    else:
+        return if_false
+
+inherit ${@mender_feature_is_enabled('mender-client-install', 'mender-setup-distro-features', '', d)}
 
 python() {
     # Add all possible Mender features here. This list is here to have an
@@ -303,15 +308,6 @@ python() {
                           + "MENDER_FEATURES_DISABLE.")
                          % feature)
 }
-
-def mender_feature_is_enabled(feature, if_true, if_false, d):
-    in_enable = bb.utils.contains('MENDER_FEATURES_ENABLE', feature, True, False, d)
-    in_disable = bb.utils.contains('MENDER_FEATURES_DISABLE', feature, True, False, d)
-
-    if in_enable and not in_disable:
-        return if_true
-    else:
-        return if_false
 
 python() {
     if d.getVar('MENDER_PARTITION_ALIGNMENT_MB', True):
