@@ -1,8 +1,6 @@
 # Class for those who want to enable all Mender required features for BIOS based
 # boards.
 
-inherit mender-setup
-
 MENDER_FEATURES_ENABLE_append = " \
     mender-image \
     mender-client-install \
