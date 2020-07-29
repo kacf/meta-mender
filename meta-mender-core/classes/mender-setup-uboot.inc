@@ -43,17 +43,3 @@ PREFERRED_RPROVIDER_nativesdk-u-boot-mkimage = "${@mender_check_distro_features_
                                                                                         'mender-uboot', \
                                                                                         'nativesdk-u-boot-mender-tools', \
                                                                                         'nativesdk-u-boot-tools')}"
-
-def mender_check_distro_features_early_contains(d, feature, if_true, if_false):
-    # Why this complicated function instead of checking DISTRO_FEATURES
-    # directly? It's because PREFERRED_PROVIDERs have some special early
-    # handling which happens before DISTRO_FEATURES is resolved, so we need to
-    # do this special early check.
-
-    in_df_backfill = bb.utils.contains('DISTRO_FEATURES_BACKFILL', feature, True, False, d)
-    in_df_backfill_considered = bb.utils.contains('DISTRO_FEATURES_BACKFILL_CONSIDERED', feature, True, False, d)
-
-    if in_df_backfill and not in_df_backfill_considered:
-        return if_true
-    else:
-        return if_false
