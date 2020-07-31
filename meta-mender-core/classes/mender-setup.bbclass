@@ -220,7 +220,11 @@ def mender_feature_is_enabled(feature, if_true, if_false, d):
     else:
         return if_false
 
-inherit ${@mender_feature_is_enabled('mender-client-install', 'mender-setup-distro-features', '', d)}
+# MENDER_FEATURES_ENABLE and MENDER_FEATURES_DISABLE map to
+# DISTRO_FEATURES_BACKFILL and DISTRO_FEATURES_BACKFILL_CONSIDERED,
+# respectively.
+DISTRO_FEATURES_BACKFILL_append = " ${MENDER_FEATURES_ENABLE}"
+DISTRO_FEATURES_BACKFILL_CONSIDERED_append = " ${MENDER_FEATURES_DISABLE}"
 
 python() {
     # Add all possible Mender features here. This list is here to have an
