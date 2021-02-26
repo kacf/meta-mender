@@ -1,0 +1,14 @@
+diff --git a/app/state.go b/app/state.go
+index 84818ca..9bbb554 100644
+--- a/src/github.com/mendersoftware/mender/app/state.go
++++ b/src/github.com/mendersoftware/mender/app/state.go
+@@ -349,6 +349,9 @@ func (i *initState) getNextState(ctx *StateContext, sd *datastore.StateData,
+ 
+ 		return NewUpdateVerifyRollbackRebootState(&sd.UpdateInfo), false
+ 
++	case datastore.MenderStateUpdateCommit:
++		return NewUpdateCommitState(&sd.UpdateInfo), false
++
+ 	// Rerun commits in subsequent payloads
+ 	case datastore.MenderStateUpdateAfterFirstCommit:
+ 		return NewUpdateAfterFirstCommitState(&sd.UpdateInfo), false
