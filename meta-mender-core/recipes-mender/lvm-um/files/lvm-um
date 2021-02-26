@@ -1,0 +1,95 @@
+#!/bin/sh
+
+set -e
+
+STATE="$1"
+FILES="$2"
+
+case "$STATE" in
+    Download)
+        AVAIL_SIZE=$(vgs --noheadings --nosuffix --units b -o free devicevg)
+        lvcreate -s --size ${AVAIL_SIZE}b --name rootfs2 devicevg/rootfs1
+
+        FILE="$(cat stream-next)"
+        if [ -z "$FILE" ]; then
+            echo "No file?"
+            exit 1
+        fi
+        exec 7<$FILE
+
+        OFFSET=0
+        while true; do
+            dd bs=1M count=1 iflag=fullblock of=/dev/shm/mender-update.block status=none 0<&7
+            BLOCK_SIZE=$(stat -c %s /dev/shm/mender-update.block)
+            if [ $BLOCK_SIZE -eq 0 ]; then
+                break
+            fi
+            dd if=/dev/devicevg/rootfs2 skip=$OFFSET iflag=skip_bytes of=/dev/shm/mender-existing.block bs=$BLOCK_SIZE count=1 status=none
+            if ! diff /dev/shm/mender-existing.block /dev/shm/mender-update.block >/dev/null; then
+                dd if=/dev/shm/mender-update.block of=/dev/devicevg/rootfs2 seek=$OFFSET oflag=seek_bytes bs=$BLOCK_SIZE count=1 status=none
+            fi
+            OFFSET=$(expr $OFFSET + $BLOCK_SIZE)
+        done
+        rm -f /dev/shm/mender-*.block
+        exec 7<&-
+        ;;
+
+    ArtifactInstall)
+        fw_setenv -s - <<EOF
+bootcount 0
+mender_boot_part 2
+upgrade_available 1
+EOF
+        ;;
+
+    NeedsArtifactReboot)
+        echo "Automatic"
+        ;;
+
+    ArtifactCommit)
+        if lvs --noheadings -o attr devicevg/rootfs2 | grep -q '^ *s'; then
+            # Not merging yet. Schedule it and reboot to start it.
+            fw_setenv -s - <<EOF
+bootcount 0
+mender_boot_part 1
+upgrade_available 0
+EOF
+            lvconvert --merge devicevg/rootfs2
+            reboot
+            sleep 600
+            # Should never get here.
+            exit 1
+        else
+            if lvs --noheadings -o attr devicevg/rootfs2 | grep -q '^ *....[Im]'; then
+                echo "Snapshot merge failed. Probably the capacity was exceeded. We need to roll back."
+                exit 1
+            fi
+        fi
+        ;;
+
+    SupportsRollback)
+        echo "Yes"
+        ;;
+
+    ArtifactRollback)
+        fw_setenv -s - <<EOF
+bootcount 0
+mender_boot_part 1
+upgrade_available 1
+EOF
+        ;;
+
+    Cleanup)
+        rm -f /dev/shm/mender-*.block
+
+        if lvs --noheadings -o attr devicevg/rootfs2 | grep -q '^ *....[Im]'; then
+            echo "Invalid snapshot found. Probably the capacity was exceeded."
+        fi
+
+        # This may or may not exist, depending on whether we committed or rolled
+        # back.
+        lvremove -y devicevg/rootfs2 || true
+        ;;
+esac
+
+exit 0
