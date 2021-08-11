@@ -369,15 +369,18 @@ patch_all_candidates_sdimg() {
 patch_all_candidates_ubi() {
     # This was the old way to refer to CONFIG_MTDIDS_DEFAULT and
     # CONFIG_MTDPARTS_DEFAULT, without the "CONFIG_" prefix. Alias them to the
-    # new ones.
-    replace_definition \
-        'MTDIDS_DEFAULT' \
-        'MTDIDS_DEFAULT' \
-        'CONFIG_MTDIDS_DEFAULT'
-    replace_definition \
-        'MTDPARTS_DEFAULT' \
-        'MTDPARTS_DEFAULT' \
-        'CONFIG_MTDPARTS_DEFAULT'
+    # new ones. However, if config_defaults.h doesn't exist, than we know it's
+    # recent enough.
+    if [ -e config_defaults.h ]; then
+        replace_definition \
+            'MTDIDS_DEFAULT' \
+            'MTDIDS_DEFAULT' \
+            'CONFIG_MTDIDS_DEFAULT'
+        replace_definition \
+            'MTDPARTS_DEFAULT' \
+            'MTDPARTS_DEFAULT' \
+            'CONFIG_MTDPARTS_DEFAULT'
+    fi
 
     replace_definition \
         'CONFIG_MTDIDS_DEFAULT' \
