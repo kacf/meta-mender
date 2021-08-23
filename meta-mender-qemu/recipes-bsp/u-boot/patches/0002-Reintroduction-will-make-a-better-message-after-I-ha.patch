@@ -1,7 +1,7 @@
-From fdc02f4285079b60ebd559a89e2d50d5dcef8ee5 Mon Sep 17 00:00:00 2001
+From 7a9e9b7b89b66a32a376dae9fe22e0198804a1fd Mon Sep 17 00:00:00 2001
 From: Kristian Amlie <kristian.amlie@northern.tech>
 Date: Tue, 17 Aug 2021 13:46:47 +0200
-Subject: [PATCH 1/1] Reintroduction (will make a better message after I have
+Subject: [PATCH 2/2] Reintroduction (will make a better message after I have
  tested)
 
 Changelog: None
@@ -12,8 +12,8 @@ Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>
  .gitlab-ci.yml                          |   6 +
  arch/arm/Kconfig                        |   6 +
  arch/arm/dts/Makefile                   |   2 +
- arch/arm/dts/vexpress-v2m.dtsi          | 451 ++++++++++++++++++++++++
- arch/arm/dts/vexpress-v2p-ca9.dts       | 369 +++++++++++++++++++
+ arch/arm/dts/vexpress-v2m.dtsi          | 427 ++++++++++++++++++++++++
+ arch/arm/dts/vexpress-v2p-ca9.dts       | 368 ++++++++++++++++++++
  arch/arm/include/asm/gpio.h             |   2 +-
  board/armltd/vexpress/Kconfig           |  12 +
  board/armltd/vexpress/MAINTAINERS       |   6 +
@@ -21,7 +21,9 @@ Signed-off-by: Kristian Amlie <kristian.amlie@northern.tech>
  board/armltd/vexpress/vexpress_common.c | 167 +++++++++
  configs/vexpress_ca9x4_defconfig        |  49 +++
  include/configs/vexpress_ca9x4.h        |  16 +
- 13 files changed, 1094 insertions(+), 1 deletion(-)
+ lib/efi_loader/efi_bootmgr.c            |   2 +
+ lib/efi_loader/efi_memory.c             |  10 +
+ 15 files changed, 1081 insertions(+), 1 deletion(-)
  create mode 100644 arch/arm/dts/vexpress-v2m.dtsi
  create mode 100644 arch/arm/dts/vexpress-v2p-ca9.dts
  create mode 100644 board/armltd/vexpress/Kconfig
@@ -101,10 +103,10 @@ index 9fb38682e6..ada231d6a1 100644
  dtb-$(CONFIG_TARGET_DURIAN) += phytium-durian.dtb
 diff --git a/arch/arm/dts/vexpress-v2m.dtsi b/arch/arm/dts/vexpress-v2m.dtsi
 new file mode 100644
-index 0000000000..706982e5a7
+index 0000000000..cc80146d55
 --- /dev/null
 +++ b/arch/arm/dts/vexpress-v2m.dtsi
-@@ -0,0 +1,451 @@
+@@ -0,0 +1,427 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * ARM Ltd. Versatile Express
@@ -249,22 +251,6 @@ index 0000000000..706982e5a7
 +					clock-names = "mclk", "apb_pclk";
 +				};
 +
-+				kmi@6000 {
-+					compatible = "arm,pl050", "arm,primecell";
-+					reg = <0x06000 0x1000>;
-+					interrupts = <12>;
-+					clocks = <&v2m_clk24mhz>, <&smbclk>;
-+					clock-names = "KMIREFCLK", "apb_pclk";
-+				};
-+
-+				kmi@7000 {
-+					compatible = "arm,pl050", "arm,primecell";
-+					reg = <0x07000 0x1000>;
-+					interrupts = <13>;
-+					clocks = <&v2m_clk24mhz>, <&smbclk>;
-+					clock-names = "KMIREFCLK", "apb_pclk";
-+				};
-+
 +				v2m_serial0: uart@9000 {
 +					compatible = "arm,pl011", "arm,primecell";
 +					reg = <0x09000 0x1000>;
@@ -295,14 +281,6 @@ index 0000000000..706982e5a7
 +					interrupts = <8>;
 +					clocks = <&v2m_oscclk2>, <&smbclk>;
 +					clock-names = "uartclk", "apb_pclk";
-+				};
-+
-+				wdt@f000 {
-+					compatible = "arm,sp805", "arm,primecell";
-+					reg = <0x0f000 0x1000>;
-+					interrupts = <0>;
-+					clocks = <&v2m_refclk32khz>, <&smbclk>;
-+					clock-names = "wdogclk", "apb_pclk";
 +				};
 +
 +				v2m_timer01: timer@11000 {
@@ -559,10 +537,10 @@ index 0000000000..706982e5a7
 \ No newline at end of file
 diff --git a/arch/arm/dts/vexpress-v2p-ca9.dts b/arch/arm/dts/vexpress-v2p-ca9.dts
 new file mode 100644
-index 0000000000..bf00c62bcf
+index 0000000000..819d1c9a6e
 --- /dev/null
 +++ b/arch/arm/dts/vexpress-v2p-ca9.dts
-@@ -0,0 +1,369 @@
+@@ -0,0 +1,368 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * ARM Ltd. Versatile Express
@@ -592,7 +570,6 @@ index 0000000000..bf00c62bcf
 +		serial1 = &v2m_serial1;
 +		serial2 = &v2m_serial2;
 +		serial3 = &v2m_serial3;
-+		i2c0 = &v2m_i2c_dvi;
 +		i2c1 = &v2m_i2c_pcie;
 +		mmc0 = &mmc0;
 +	};
@@ -1237,6 +1214,75 @@ index 0000000000..8157a5868d
 +#include "vexpress_common.h"
 +
 +#endif /* VEXPRESS_CA9X4_H */
+diff --git a/lib/efi_loader/efi_bootmgr.c b/lib/efi_loader/efi_bootmgr.c
+index 1fe19237f9..fab063931c 100644
+--- a/lib/efi_loader/efi_bootmgr.c
++++ b/lib/efi_loader/efi_bootmgr.c
+@@ -45,6 +45,7 @@ static const struct efi_runtime_services *rs;
+ static efi_status_t try_load_entry(u16 n, efi_handle_t *handle,
+ 				   void **load_options)
+ {
++    printf("In %s at %i\n", __func__, __LINE__);
+ 	struct efi_load_option lo;
+ 	u16 varname[] = L"Boot0000";
+ 	u16 hexmap[] = L"0123456789ABCDEF";
+@@ -139,6 +140,7 @@ unload:
+  */
+ efi_status_t efi_bootmgr_load(efi_handle_t *handle, void **load_options)
+ {
++    printf("In %s at %i\n", __func__, __LINE__);
+ 	u16 bootnext, *bootorder;
+ 	efi_uintn_t size;
+ 	int i, num;
+diff --git a/lib/efi_loader/efi_memory.c b/lib/efi_loader/efi_memory.c
+index cb4b262710..4a0555da50 100644
+--- a/lib/efi_loader/efi_memory.c
++++ b/lib/efi_loader/efi_memory.c
+@@ -249,6 +249,8 @@ static efi_status_t efi_add_memory_map_pg(u64 start, u64 pages,
+ 	uint64_t carved_pages = 0;
+ 	struct efi_event *evt;
+ 
++        printf("In %s at %i, start = %llx\n", __func__, __LINE__, start);
++
+ 	EFI_PRINT("%s: 0x%llx 0x%llx %d %s\n", __func__,
+ 		  start, pages, memory_type, overlap_only_ram ? "yes" : "no");
+ 
+@@ -362,6 +364,8 @@ efi_status_t efi_add_memory_map(u64 start, u64 size, int memory_type)
+ {
+ 	u64 pages;
+ 
++        printf("In %s at %i, start = %llx\n", __func__, __LINE__, start);
++
+ 	pages = efi_size_in_pages(size + (start & EFI_PAGE_MASK));
+ 	start &= ~EFI_PAGE_MASK;
+ 
+@@ -706,6 +710,8 @@ efi_status_t efi_add_conventional_memory_map(u64 ram_start, u64 ram_end,
+ {
+ 	u64 pages;
+ 
++        printf("In %s at %i, start = %llx\n", __func__, __LINE__, ram_start);
++
+ 	/* Remove partial pages */
+ 	ram_end &= ~EFI_PAGE_MASK;
+ 	ram_start = (ram_start + EFI_PAGE_MASK) & ~EFI_PAGE_MASK;
+@@ -746,6 +752,8 @@ __weak void efi_add_known_memory(void)
+ 	u64 ram_top = board_get_usable_ram_top(0) & ~EFI_PAGE_MASK;
+ 	int i;
+ 
++        printf("In %s at %i\n", __func__, __LINE__);
++
+ 	/*
+ 	 * ram_top is just outside mapped memory. So use an offset of one for
+ 	 * mapping the sandbox address.
+@@ -775,6 +783,8 @@ static void add_u_boot_and_runtime(void)
+ 	unsigned long uboot_start, uboot_pages;
+ 	unsigned long uboot_stack_size = CONFIG_STACK_SIZE;
+ 
++        printf("In %s at %i\n", __func__, __LINE__);
++
+ 	/* Add U-Boot */
+ 	uboot_start = ((uintptr_t)map_sysmem(gd->start_addr_sp, 0) -
+ 		       uboot_stack_size) & ~EFI_PAGE_MASK;
 -- 
 2.17.1
 

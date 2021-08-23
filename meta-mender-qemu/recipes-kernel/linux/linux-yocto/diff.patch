@@ -1,0 +1,129 @@
+diff --git a/drivers/firmware/efi/libstub/arm32-stub.c b/drivers/firmware/efi/libstub/arm32-stub.c
+index 41213bf5fcf5..6df526860ac3 100644
+--- a/drivers/firmware/efi/libstub/arm32-stub.c
++++ b/drivers/firmware/efi/libstub/arm32-stub.c
+@@ -187,6 +187,22 @@ static efi_status_t reserve_kernel_base(efi_system_table_t *sys_table_arg,
+ 	return status;
+ }
+ 
++void kacf(char array[9], long unsigned int n)
++{
++    int i;
++    char c;
++    for (i = 0; i < 8; i++) {
++        c = ((0xf << (i * 4)) & n) >> (i * 4);
++        if (c < 10) {
++            c = '0' + c;
++        } else {
++            c = 'a' + c - 10;
++        }
++        array[7 - i] = c;
++    }
++    array[8] = '\0';
++}
++
+ efi_status_t handle_kernel_image(efi_system_table_t *sys_table,
+ 				 unsigned long *image_addr,
+ 				 unsigned long *image_size,
+@@ -197,6 +213,7 @@ efi_status_t handle_kernel_image(efi_system_table_t *sys_table,
+ {
+ 	unsigned long kernel_base;
+ 	efi_status_t status;
++        char mesg[9];
+ 
+ 	/*
+ 	 * Verify that the DRAM base address is compatible with the ARM
+@@ -243,6 +260,19 @@ efi_status_t handle_kernel_image(efi_system_table_t *sys_table,
+ 	 * in memory. The kernel determines the base of DRAM from the
+ 	 * address at which the zImage is loaded.
+ 	 */
++        efi_printk(sys_table, "HERE ");
++        kacf(mesg, *image_addr);
++        efi_printk(sys_table, mesg);
++        efi_printk(sys_table, " ");
++        kacf(mesg, *image_size);
++        efi_printk(sys_table, mesg);
++        efi_printk(sys_table, " ");
++        kacf(mesg, dram_base);
++        efi_printk(sys_table, mesg);
++        efi_printk(sys_table, " ");
++        kacf(mesg, ZIMAGE_OFFSET_LIMIT);
++        efi_printk(sys_table, mesg);
++        efi_printk(sys_table, "\n");
+ 	if (*image_addr + *image_size > dram_base + ZIMAGE_OFFSET_LIMIT) {
+ 		pr_efi_err(sys_table, "Failed to relocate kernel, no low memory available.\n");
+ 		efi_free(sys_table, *reserve_size, *reserve_addr);
+diff --git a/drivers/firmware/efi/libstub/efi-stub-helper.c b/drivers/firmware/efi/libstub/efi-stub-helper.c
+index 35dbc2791c97..db667ba7bcc2 100644
+--- a/drivers/firmware/efi/libstub/efi-stub-helper.c
++++ b/drivers/firmware/efi/libstub/efi-stub-helper.c
+@@ -33,6 +33,8 @@ static int __section(.data) __nokaslr;
+ static int __section(.data) __quiet;
+ static int __section(.data) __novamap;
+ 
++void kacf(char array[9], long unsigned int n);
++
+ int __pure nokaslr(void)
+ {
+ 	return __nokaslr;
+@@ -177,6 +179,7 @@ efi_status_t efi_high_alloc(efi_system_table_t *sys_table_arg,
+ 	unsigned long nr_pages;
+ 	u64 max_addr = 0;
+ 	int i;
++        char mesg[9];
+ 	struct efi_boot_memmap boot_map;
+ 
+ 	boot_map.map =		&map;
+@@ -208,12 +211,18 @@ efi_status_t efi_high_alloc(efi_system_table_t *sys_table_arg,
+ 		u64 start, end;
+ 
+ 		desc = efi_early_memdesc_ptr(m, desc_size, i);
++                efi_printk(sys_table_arg, "Evaluating address ");
++                kacf(mesg, desc->phys_addr);
++                efi_printk(sys_table_arg, mesg);
++                efi_printk(sys_table_arg, "\n");
+ 		if (desc->type != EFI_CONVENTIONAL_MEMORY)
+ 			continue;
++                efi_printk(sys_table_arg, "HERE 1\n");
+ 
+ 		if (desc->num_pages < nr_pages)
+ 			continue;
+ 
++                efi_printk(sys_table_arg, "HERE 2\n");
+ 		start = desc->phys_addr;
+ 		end = start + desc->num_pages * EFI_PAGE_SIZE;
+ 
+@@ -223,9 +232,11 @@ efi_status_t efi_high_alloc(efi_system_table_t *sys_table_arg,
+ 		if ((start + size) > end)
+ 			continue;
+ 
++                efi_printk(sys_table_arg, "HERE 3\n");
+ 		if (round_down(end - size, align) < start)
+ 			continue;
+ 
++                efi_printk(sys_table_arg, "HERE 4\n");
+ 		start = round_down(end - size, align);
+ 
+ 		/*
+@@ -239,9 +250,12 @@ efi_status_t efi_high_alloc(efi_system_table_t *sys_table_arg,
+ 			max_addr = start;
+ 	}
+ 
+-	if (!max_addr)
++	if (!max_addr) {
+ 		status = EFI_NOT_FOUND;
++                efi_printk(sys_table_arg, "HERE 5\n");
++        }
+ 	else {
++                efi_printk(sys_table_arg, "HERE 6\n");
+ 		status = efi_call_early(allocate_pages,
+ 					EFI_ALLOCATE_ADDRESS, EFI_LOADER_DATA,
+ 					nr_pages, &max_addr);
+@@ -250,6 +264,7 @@ efi_status_t efi_high_alloc(efi_system_table_t *sys_table_arg,
+ 			max_addr = 0;
+ 			goto again;
+ 		}
++                efi_printk(sys_table_arg, "HERE 7\n");
+ 
+ 		*addr = max_addr;
+ 	}

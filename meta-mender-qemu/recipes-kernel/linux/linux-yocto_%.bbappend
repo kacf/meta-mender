@@ -4,6 +4,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI_append_vexpress-qemu = " file://defconfig \
                                 file://vexpress-qemu-standard.scc \
                                 file://reduce-memory-to-256m.patch \
+                                file://diff.patch \
                                " 
 COMPATIBLE_MACHINE_vexpress-qemu = "vexpress-qemu"
 
