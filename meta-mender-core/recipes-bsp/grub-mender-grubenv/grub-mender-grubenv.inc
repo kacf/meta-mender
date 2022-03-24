@@ -84,7 +84,7 @@ do_compile() {
 do_install() {
     set -x
 
-    oe_runmake -f ${S}/Makefile srcdir=${S} ENV_DIR=${GRUB_CONF_LOCATION} DESTDIR=${D} install
+    oe_runmake -f ${S}/Makefile srcdir=${S} ENV_DIR=${GRUB_CONF_LOCATION} DESTDIR=${D} install-standalone
 }
 
 python() {
