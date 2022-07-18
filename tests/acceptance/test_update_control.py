@@ -208,6 +208,26 @@ class TestUpdateControl:
             },
         },
         {
+            "name": "Pause in ArtifactInstall_Enter, then reboot",
+            "case": {
+                "maps": [
+                    {
+                        "id": MUID,
+                        "states": {"ArtifactInstall_Enter": {"action": "pause",},},
+                    }
+                ],
+                "success": False,
+                "state_before_pause": "Download",
+                "restart_during_pause": True,
+                "continue_map": {
+                    "id": MUID,
+                    # Action does not matter, this should fail.
+                    "states": {"ArtifactInstall_Enter": {"action": "pause",},},
+                },
+                "last_successful_state": "Download",
+            },
+        },
+        {
             "name": "Pause in ArtifactReboot_Enter",
             "case": {
                 "maps": [
@@ -221,6 +241,27 @@ class TestUpdateControl:
                 "continue_map": {
                     "id": MUID,
                     "states": {"ArtifactReboot_Enter": {"action": "continue",},},
+                },
+                "last_successful_state": "ArtifactCommit",
+            },
+        },
+        {
+            "name": "Pause in ArtifactReboot_Enter, then reboot",
+            "case": {
+                "maps": [
+                    {
+                        "id": MUID,
+                        "states": {"ArtifactReboot_Enter": {"action": "pause",},},
+                    }
+                ],
+                "success": True,
+                "state_before_pause": "ArtifactInstall",
+                "restart_during_pause": True,
+                "continue_map": {
+                    "id": MUID,
+                    # The restart should make sure we continue after the reboot, even if the
+                    # ArtifactReboot_Enter map is set to pause.
+                    "states": {"ArtifactReboot_Enter": {"action": "pause",},},
                 },
                 "last_successful_state": "ArtifactCommit",
             },
@@ -241,6 +282,26 @@ class TestUpdateControl:
                     "states": {"ArtifactCommit_Enter": {"action": "continue",},},
                 },
                 "last_successful_state": "ArtifactCommit",
+            },
+        },
+        {
+            "name": "Pause in ArtifactCommit_Enter, then reboot",
+            "case": {
+                "maps": [
+                    {
+                        "id": MUID,
+                        "states": {"ArtifactCommit_Enter": {"action": "pause",},},
+                    }
+                ],
+                "success": False,
+                "state_before_pause": "ArtifactVerifyReboot",
+                "restart_during_pause": True,
+                "continue_map": {
+                    "id": MUID,
+                    # Action does not matter, this should fail.
+                    "states": {"ArtifactCommit_Enter": {"action": "pause",},},
+                },
+                "last_successful_state": "ArtifactVerifyReboot",
             },
         },
         {
@@ -449,8 +510,21 @@ class TestUpdateControl:
                     pause_state_observed += 1
                     # Verify that it stays in paused mode.
                     if pause_state_observed >= PAUSE_STATE_OBSERVE_COUNT:
+                        if case.get("restart_during_pause"):
+                            connection.run("systemctl restart mender-client")
                         # Now insert the map to unblock the pause.
-                        set_update_control_map(connection, case["continue_map"])
+                        attempts = 10
+                        while attempts > 0:
+                            try:
+                                set_update_control_map(connection, case["continue_map"])
+                                break
+                            except:
+                                # Due to the restart above, this may fail if the client is not
+                                # ready. Retry a few of times.
+                                attempts -= 1
+                                time.sleep(5)
+                        else:
+                            raise Exception("Could not insert map after restarting client.")
                         continue_map_inserted = True
 
                 # Cleanup is the last state of a deployment
