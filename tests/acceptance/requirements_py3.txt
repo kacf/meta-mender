@@ -2,7 +2,7 @@ attrs==21.4.0
 bcrypt==3.2.2
 certifi==2021.10.8
 cffi==1.15.0
-chardet==4.0.0
+chardet==5.1.0
 cryptography==36.0.1
 fabric==2.6.0
 filelock==3.4.0
